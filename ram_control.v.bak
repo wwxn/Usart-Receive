@@ -1,0 +1,49 @@
+module ram_control
+(
+	input clk,
+	input rst_n,
+	input [7:0] data_input,
+	input rx_valid,
+	output reg [28:0]freq_out
+);
+
+reg [27:0] freq_reg;
+reg [5:0] state;
+reg set_flag;
+
+always@(posedge clk)
+begin
+	if(!rst_n)
+	begin
+		freq_reg<=27'd0;
+		state<6'd1;
+	end
+	else if(!state)
+		state<=6'd1;
+	else if(rx_valid)
+		case(state)
+		1:
+		begin
+			if(data_input==8'hff)
+				state<=state+1'b1;
+				freq_reg<=28'd0;
+		end
+		2:
+		begin
+			if(data_input==8'hfe)
+				state<=state+1'b1;
+			else
+				freq_reg<=(freq_reg<<8)|data_input;
+		end
+		3:
+		begin
+			freq_out<=freq_reg
+			set_flag<=1'b1;
+			state<=6'd1;
+		end
+		endcase
+end
+
+
+
+endmodule 
